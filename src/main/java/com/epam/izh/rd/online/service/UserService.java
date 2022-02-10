@@ -1,6 +1,7 @@
 package com.epam.izh.rd.online.service;
 
 import com.epam.izh.rd.online.entity.User;
+import com.epam.izh.rd.online.exception.NotAccessException;
 import com.epam.izh.rd.online.exception.SimplePasswordException;
 import com.epam.izh.rd.online.exception.UserAlreadyRegisteredException;
 import com.epam.izh.rd.online.repository.IUserRepository;
@@ -37,7 +38,6 @@ public class UserService implements IUserService {
     @Override
     public User register(User user) throws UserAlreadyRegisteredException, SimplePasswordException {
 
-//        if (1==1) throw new IllegalArgumentException("Ошибка в заполнении полей");
         if ((user.getLogin() == null || user.getLogin().isEmpty()) ||
                 (user.getPassword() == null || user.getPassword().isEmpty()) )
             throw new IllegalArgumentException("Ошибка в заполнении полей");
@@ -47,11 +47,9 @@ public class UserService implements IUserService {
             throw new UserAlreadyRegisteredException(
                     String.format("Пользователь с логином '%s' уже зарегистрирован", userLogin ));
         }
-        String userPassword = user.getPassword();
-        Pattern pattern = Pattern.compile("[0-9]]");
-        Matcher matcher = pattern.matcher(userPassword);
 
-        if ( userPassword.matches("[0-9]]") ) {
+        String userPassword = user.getPassword();
+        if ( userPassword.matches("\\d+") ) {
             throw new SimplePasswordException("Пароль не соответствует требованиям безопасности");
         }
 
@@ -77,14 +75,12 @@ public class UserService implements IUserService {
      *
      * @param login
      */
-    public void delete(String login) {
+    public void delete(String login) throws NotAccessException {
 
-        // Здесь необходимо сделать доработку метод
-
+        try {
             userRepository.deleteByLogin(login);
-
-        // Здесь необходимо сделать доработку метода
-
+        } catch (UnsupportedOperationException e) {
+            throw new NotAccessException("Недостаточно прав для выполнения операции", e);
+        }
     }
-
 }
